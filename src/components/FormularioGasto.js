@@ -11,14 +11,19 @@ import {
 
 import globalStyles from '../styles';
 
-const FormularioGasto = ({setModal}) => {
+const FormularioGasto = ({setModal, handleGasto, setGasto}) => {
   const [nombre, setNombre] = useState('');
   const [cantidad, setCantidad] = useState('');
   const [categoria, setCategoria] = useState('');
   return (
     <SafeAreaView style={styles.contenedor}>
       <View>
-        <Pressable onPress={() => setModal(false)} style={styles.btnCancelar}>
+        <Pressable
+          onPress={() => {
+            setModal(false);
+            setGasto({});
+          }}
+          style={styles.btnCancelar}>
           <Text style={styles.btnCancelarTexto}>Cancelar</Text>
         </Pressable>
       </View>
@@ -49,7 +54,11 @@ const FormularioGasto = ({setModal}) => {
 
         <View style={styles.campo}>
           <Text style={styles.label}>Categoria Gasto</Text>
-          <Picker selectedValue={categoria}>
+          <Picker
+            selectedValue={categoria}
+            onValueChange={valor => {
+              setCategoria(valor);
+            }}>
             <Picker.Item label="---Selecciona---" value="" />
             <Picker.Item label="Ahorro" value="ahorro" />
             <Picker.Item label="Comida" value="comida" />
@@ -61,7 +70,9 @@ const FormularioGasto = ({setModal}) => {
           </Picker>
         </View>
 
-        <Pressable style={styles.submitBtn}>
+        <Pressable
+          style={styles.submitBtn}
+          onPress={() => handleGasto({nombre, cantidad, categoria})}>
           <Text style={styles.submitBtnTexto}>Agregar Gasto</Text>
         </Pressable>
       </View>

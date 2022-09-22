@@ -16,12 +16,15 @@ import ControlPresupuesto from './src/components/ControlPresupuesto';
 import FormularioGasto from './src/components/FormularioGasto';
 import Header from './src/components/Header';
 import NuevoPresupuesto from './src/components/NuevoPresupuesto';
+import ListadoGastos from './src/components/ListadoGastos';
+import {generarID} from './src/helpers';
 
 const App = () => {
   const [isValidPresupuesto, setIsValidPresupuesto] = useState(false);
   const [presupuesto, setPresupuesto] = useState(0);
   const [gastos, setGastos] = useState([]);
   const [modal, setModal] = useState(false);
+  const [gasto, setGasto] = useState({});
 
   const handleNuevoPresupuesto = presupuesto => {
     console.log('desde app', presupuesto);
@@ -30,6 +33,18 @@ const App = () => {
     } else {
       Alert.alert('Error', 'El Presupuesto no puede ser 0 o menor');
     }
+  };
+
+  const handleGasto = gasto => {
+    if (Object.values(gasto).includes('')) {
+      Alert.alert('Error', 'Todos los campos son obligatorios');
+      return;
+    }
+    // añadir el nuevo gasto al state
+    gasto.id = generarID();
+    gasto.fecha = Date.now();
+    setGastos([...gastos, gasto]);
+    setModal(!modal);
   };
 
   return (
@@ -41,18 +56,28 @@ const App = () => {
       </View>
 
       <View style={styles.contenedor}>
-        <View style={styles.header}>
-          <Header />
-          {isValidPresupuesto ? (
-            <ControlPresupuesto presupuesto={presupuesto} gastos={gastos} />
-          ) : (
-            <NuevoPresupuesto
-              presupuesto={presupuesto}
-              setPresupuesto={setPresupuesto}
-              handleNuevoPresupuesto={handleNuevoPresupuesto}
+        <ScrollView>
+          <View style={styles.header}>
+            <Header />
+            {isValidPresupuesto ? (
+              <ControlPresupuesto presupuesto={presupuesto} gastos={gastos} />
+            ) : (
+              <NuevoPresupuesto
+                presupuesto={presupuesto}
+                setPresupuesto={setPresupuesto}
+                handleNuevoPresupuesto={handleNuevoPresupuesto}
+              />
+            )}
+          </View>
+
+          {isValidPresupuesto && (
+            <ListadoGastos
+              gastos={gastos}
+              setModal={setModal}
+              setGasto={setGasto}
             />
           )}
-        </View>
+        </ScrollView>
 
         {modal && (
           <Modal
@@ -61,7 +86,11 @@ const App = () => {
             onRequestClose={() => {
               setModal(!modal);
             }}>
-            <FormularioGasto setModal={setModal} />
+            <FormularioGasto
+              setModal={setModal}
+              handleGasto={handleGasto}
+              setGasto={setGasto}
+            />
           </Modal>
         )}
 
@@ -85,12 +114,13 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#3B82F6',
+    minHeight: 450,
   },
   imagen: {
     width: 60,
     height: 60,
     position: 'absolute',
-    top: 120,
+    bottom: 10,
     right: 20,
   },
 });
