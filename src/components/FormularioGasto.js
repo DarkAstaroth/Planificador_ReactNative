@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Picker} from '@react-native-picker/picker';
 import {
   Pressable,
@@ -11,25 +11,51 @@ import {
 
 import globalStyles from '../styles';
 
-const FormularioGasto = ({setModal, handleGasto, setGasto}) => {
+const FormularioGasto = ({
+  setModal,
+  handleGasto,
+  setGasto,
+  gasto,
+  eliminarGasto,
+}) => {
   const [nombre, setNombre] = useState('');
   const [cantidad, setCantidad] = useState('');
   const [categoria, setCategoria] = useState('');
+  const [id, setId] = useState('');
+  const [fecha, setFecha] = useState('');
+
+  useEffect(() => {
+    if (gasto?.nombre) {
+      setNombre(gasto.nombre);
+      setCantidad(gasto.cantidad);
+      setCategoria(gasto.categoria);
+      setId(gasto.id);
+      setFecha(gasto.fecha);
+    }
+  }, [gasto]);
+
   return (
     <SafeAreaView style={styles.contenedor}>
-      <View>
+      <View style={styles.contenedorBotones}>
         <Pressable
           onPress={() => {
             setModal(false);
             setGasto({});
           }}
-          style={styles.btnCancelar}>
-          <Text style={styles.btnCancelarTexto}>Cancelar</Text>
+          style={[styles.btn, styles.btnCancelar]}>
+          <Text style={styles.btnTexto}>Cancelar</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => eliminarGasto(id)}
+          style={[styles.btn, styles.btnEliminar]}>
+          <Text style={styles.btnTexto}>Eliminar</Text>
         </Pressable>
       </View>
 
       <View style={styles.formulario}>
-        <Text style={styles.titulo}>Nuevo Gasto</Text>
+        <Text style={styles.titulo}>
+          {gasto?.nombre ? 'Editar Gasto' : 'Nuevo Gasto'}
+        </Text>
 
         <View style={styles.campo}>
           <Text style={styles.label}>Nombre Gasto</Text>
@@ -72,8 +98,10 @@ const FormularioGasto = ({setModal, handleGasto, setGasto}) => {
 
         <Pressable
           style={styles.submitBtn}
-          onPress={() => handleGasto({nombre, cantidad, categoria})}>
-          <Text style={styles.submitBtnTexto}>Agregar Gasto</Text>
+          onPress={() => handleGasto({nombre, cantidad, categoria, id, fecha})}>
+          <Text style={styles.submitBtnTexto}>
+            {gasto?.nombre ? 'Guardar cambios gasto' : 'Agregar Gasto'}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -85,13 +113,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e40ef',
     flex: 1,
   },
-  btnCancelar: {
-    backgroundColor: '#db2777',
+  contenedorBotones: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  btn: {
     padding: 10,
     marginTop: 30,
     marginHorizontal: 10,
+    flex: 1,
   },
-  btnCancelarTexto: {
+  btnCancelar: {
+    backgroundColor: '#db2777',
+  },
+  btnEliminar: {
+    backgroundColor: 'red',
+  },
+  btnTexto: {
     textTransform: 'uppercase',
     fontWeight: 'bold',
     color: '#fff',

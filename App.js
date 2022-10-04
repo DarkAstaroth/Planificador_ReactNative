@@ -36,15 +36,46 @@ const App = () => {
   };
 
   const handleGasto = gasto => {
-    if (Object.values(gasto).includes('')) {
+    if ([gasto.nombre, gasto.categoria, gasto.cantidad].includes('')) {
       Alert.alert('Error', 'Todos los campos son obligatorios');
       return;
     }
-    // añadir el nuevo gasto al state
-    gasto.id = generarID();
-    gasto.fecha = Date.now();
-    setGastos([...gastos, gasto]);
+
+    if (gasto.id) {
+      const gastosActualizados = gastos.map(gastoState =>
+        gastoState.id === gasto.id ? gasto : gastoState,
+      );
+      setGastos(gastosActualizados);
+    } else {
+      // añadir el nuevo gasto al state
+      gasto.id = generarID();
+      gasto.fecha = Date.now();
+      setGastos([...gastos, gasto]);
+    }
+
     setModal(!modal);
+  };
+
+  const eliminarGasto = id => {
+    Alert.alert(
+      '¿Deseas eliminar este gasto?',
+      'Un gasto eliminado no se puede recuperar',
+      [
+        {text: 'no', style: 'cancel'},
+        {
+          text: 'Si, Eliminar',
+          onPress: () => {
+            const gastosActualizados = gastos.filter(
+              gastoState => gastoState.id !== id,
+            );
+
+            setGastos(gastosActualizados);
+            setModal(!modal);
+            setGasto({});
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -88,14 +119,16 @@ const App = () => {
             }}>
             <FormularioGasto
               setModal={setModal}
+              gasto={gasto}
               handleGasto={handleGasto}
               setGasto={setGasto}
+              eliminarGasto={eliminarGasto}
             />
           </Modal>
         )}
 
         {isValidPresupuesto && (
-          <Pressable onPress={() => setModal(!modal)}>
+          <Pressable style={styles.pressable} onPress={() => setModal(!modal)}>
             <Image
               style={styles.imagen}
               source={require('./src/img/nuevo-gasto.png')}
@@ -116,12 +149,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6',
     minHeight: 450,
   },
-  imagen: {
+  pressable: {
     width: 60,
     height: 60,
     position: 'absolute',
     bottom: 10,
     right: 20,
+  },
+  imagen: {
+    width: 60,
+    height: 60,
   },
 });
 
