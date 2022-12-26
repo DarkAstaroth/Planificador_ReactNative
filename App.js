@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {useState} from 'react';
 import {
   Alert,
@@ -12,12 +12,14 @@ import {
   Text,
   View,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ControlPresupuesto from './src/components/ControlPresupuesto';
 import FormularioGasto from './src/components/FormularioGasto';
 import Header from './src/components/Header';
 import NuevoPresupuesto from './src/components/NuevoPresupuesto';
 import ListadoGastos from './src/components/ListadoGastos';
 import {generarID} from './src/helpers';
+import Filtro from './src/components/Filtro';
 
 const App = () => {
   const [isValidPresupuesto, setIsValidPresupuesto] = useState(false);
@@ -25,6 +27,72 @@ const App = () => {
   const [gastos, setGastos] = useState([]);
   const [modal, setModal] = useState(false);
   const [gasto, setGasto] = useState({});
+  const [filtro, setFiltro] = useState('');
+  const [gastosFiltrados, setGastosFiltrados] = useState([]);
+
+  useEffect(() => {
+    const obtenerPresupuestoStorage = async () => {
+      try {
+        const presupuestoStorage =
+          (await AsyncStorage.getItem('planificador-presupuesto')) ?? 0;
+
+        if (presupuestoStorage > 0) {
+          setPresupuesto(presupuestoStorage);
+          setIsValidPresupuesto(true);
+        }
+
+        console.log(presupuestoStorage);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    obtenerPresupuestoStorage();
+  }, []);
+
+  useEffect(() => {
+    if (isValidPresupuesto) {
+      const guardarPresupuesto = async () => {
+        try {
+          await AsyncStorage.setItem('planificador-presupuesto', presupuesto);
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      guardarPresupuesto();
+    }
+  }, [isValidPresupuesto]);
+
+  useEffect(() => {
+    const obtenerGastosStorage = async () => {
+      try {
+        const gastosStorage = await AsyncStorage.getItem('planificador-gastos');
+
+        setGastos(gastosStorage ? JSON.parse(gastosStorage) : []);
+
+        console.log(gastosStorage);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    obtenerGastosStorage();
+  }, []);
+
+  useEffect(() => {
+    const guardarStorage = async () => {
+      try {
+        await AsyncStorage.setItem(
+          'planificador-gastos',
+          JSON.stringify(gastos),
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    guardarStorage();
+  }, [gastos]);
 
   const handleNuevoPresupuesto = presupuesto => {
     console.log('desde app', presupuesto);
@@ -78,6 +146,29 @@ const App = () => {
     );
   };
 
+  const resetApp = () => {
+    Alert.alert(
+      'Deseas resetear la app?',
+      'Esto eliminara presupuesto y gastos',
+      [
+        {text: 'No', style: 'cancel'},
+        {
+          text: 'Si, Eliminar',
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              setIsValidPresupuesto(false);
+              setPresupuesto(0);
+              setGastos([]);
+            } catch (error) {
+              console.log(error);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <>
       <View>
@@ -91,7 +182,11 @@ const App = () => {
           <View style={styles.header}>
             <Header />
             {isValidPresupuesto ? (
-              <ControlPresupuesto presupuesto={presupuesto} gastos={gastos} />
+              <ControlPresupuesto
+                presupuesto={presupuesto}
+                gastos={gastos}
+                resetApp={resetApp}
+              />
             ) : (
               <NuevoPresupuesto
                 presupuesto={presupuesto}
@@ -102,11 +197,22 @@ const App = () => {
           </View>
 
           {isValidPresupuesto && (
-            <ListadoGastos
-              gastos={gastos}
-              setModal={setModal}
-              setGasto={setGasto}
-            />
+            <>
+              <Filtro
+                setFiltro={setFiltro}
+                filtro={filtro}
+                gastos={gastos}
+                setGastosFiltrados={setGastosFiltrados}
+              />
+
+              <ListadoGastos
+                filtro={filtro}
+                gastosFiltrados={gastosFiltrados}
+                gastos={gastos}
+                setModal={setModal}
+                setGasto={setGasto}
+              />
+            </>
           )}
         </ScrollView>
 

@@ -1,11 +1,13 @@
 import React, {useState, useEffect} from 'react';
-import {Image, StyleSheet, Text, View} from 'react-native';
+import {Pressable, StyleSheet, Text, View} from 'react-native';
 import globalStyles from '../styles';
 import {formatearCantidad} from '../helpers';
+import CircularProgress from 'react-native-circular-progress-indicator';
 
-const ControlPresupuesto = ({presupuesto, gastos}) => {
+const ControlPresupuesto = ({presupuesto, gastos,resetApp}) => {
   const [disponible, setDisponible] = useState(0);
   const [gastado, setGastado] = useState(0);
+  const [porcentaje, setPorcentaje] = useState(0);
 
   useEffect(() => {
     const totalGastado = gastos.reduce(
@@ -14,6 +16,11 @@ const ControlPresupuesto = ({presupuesto, gastos}) => {
     );
 
     const totalDisponible = presupuesto - totalGastado;
+    const nuevoPorcentaje =
+      ((presupuesto - totalDisponible) / presupuesto) * 100;
+    setTimeout(() => {
+      setPorcentaje(nuevoPorcentaje);
+    }, 1000);
     setDisponible(totalDisponible);
     setGastado(totalGastado);
   }, [gastos]);
@@ -21,10 +28,26 @@ const ControlPresupuesto = ({presupuesto, gastos}) => {
   return (
     <View style={styles.contenedor}>
       <View style={styles.centrarGrafica}>
-        <Image style={styles.imagen} source={require('../img/grafico.jpg')} />
+        <CircularProgress
+          value={porcentaje}
+          duration={1000}
+          radius={150}
+          valueSuffix={'%'}
+          title={'Gastado'}
+          inActiveStrokeColor={'#f5f5f5'}
+          inActiveStrokeWidth={20}
+          activeStrokeColor={'#3b82f6'}
+          activeStrokeWidth={20}
+          titleStyle={{fontWeight: 'bold', fontSize: 20}}
+          titleColor={'#64748b'}
+        />
       </View>
 
       <View style={styles.contenedorTexto}>
+        <Pressable style={styles.boton} onLongPress={resetApp}>
+          <Text style={styles.textoBoton}>Reiniciar App</Text>
+        </Pressable>
+
         <Text style={styles.valor}>
           <Text style={styles.label}>Presupuesto: </Text>{' '}
           {formatearCantidad(presupuesto)}
@@ -54,6 +77,18 @@ const styles = StyleSheet.create({
   imagen: {
     width: 200,
     height: 200,
+  },
+  boton: {
+    backgroundColor: '#db2777',
+    padding: 10,
+    marginBottom: 40,
+    borderRadius: 5,
+  },
+  textoBoton: {
+    textAlign: 'center',
+    color: '#fff',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
   contenedorTexto: {
     marginTop: 50,
